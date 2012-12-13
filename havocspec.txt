@@ -1,0 +1,182 @@
+This is an actual spec for the Havoc VM and instruction set.
+I have all of this more or less written down, but having your entire
+documentation be in .h files is a bit gauche.
+
+So, first off, goals.  Havoc is designed to be simple, small, and
+well-designed.  Speed is only a priority so far as making things go
+fast would be interesting; hackability is more of a concern.
+
+Next, design principles.  This is a 32-bit stand-alone VM.  It should
+be RISC-y and simple both to implement and code for.  The instruction
+set should be orthogonal and easy to parse.  It has to be useful, but
+special cases are a bad thing.
+Stability is also a good thing.  It's okay if a processor exception
+exits the program, but I don't like segfaults.  Thus, most memory
+accesses should be bounds-checked.
+
+REGISTERS:
+There are 12 registers.  The binary instructions themselves simply number 
+them 1-12.  Which number maps to which register is currently defined only
+by the "hvreg" enumeration in havocvm.h
+ip is the instruction pointer.
+dp and cp are the data and call stack pointers.
+flags is the flag register.  Right now, flag bits are set only by the cmp
+and cmpz instructions; the flags are LT, GT, EQ and ZERO.
+r0 thru r7 are general registers.
+
+Each register is 32 bits wide.
+
+MEMORY
+The address space is just one big chunk of memory, with a known
+length.  Everything inside it is uniform.  However, there is support
+for two processor stacks within it: the call stack, and the data
+stack.  Each stack is simply represented by a pointer, dp and cp.
+There are no base pointers; make sure yourself that you don't run over
+things.  Both stacks grow downward.  Code and data can go wherever you
+want to put them.
+Memory is addressed in 32-bit words.  All memory accesses and such are word-
+aligned.  This is going to make character I/O and such a bit interesting
+down the line, but oh well.
+There is no virtual memory.  Thank gods.
+
+INSTRUCTIONS
+After looking at the ARM and PPC instruction sets, I realize that mine
+is so simple as to be nearly brain-dead.  This means it really can't do
+some of the things one might assume, like relative jumps.  Read below
+for more info.
+Also, I'm pretty sure this is going to change at least a few more times,
+and thus want to leave room for expansion.  Anyway.
+Each instruction is 32 bits long, with an optional 32 bit data field
+behind it.  Each instruction takes zero to two arguments.  Except for
+the store instruction, the destination is always a register.  It can
+be any register you want, even ip or flags.
+All assembly is of the form "instr <dest> <source>".
+
+There are no floating point operations yet.  Integer math doesn't do 
+overflow or carry or anything.
+
+Bits 0-7 store the opcode.
+Bits 8 and 9 store the argument type.  00 = absolute address,
+01 = register, 10 = constant value, 11 = address specified by 
+register
+Bit 10 stores a flag telling whether or not the instruction is
+followed by a 32-bit chunk of supplementary data.
+Bits 11-15 are unused, and reserved for future use.
+Bits 16-31 are used for argument data.  This can be a register
+number, constant, address, or anything else.  Generally, they hold
+either a 16-bit half-word or two 8-bit bytes.
+
+The low byte of the data space, bits 16-23, is the location of the 
+destination argument (if applicable), and bits 24-31 are the source
+argument.
+If bit 10 is set, then the instruction is followed by 32 bits of 
+data that is used instead or in addition to the data field.
+
+
+          1         2         3
+01234567890123456789012345678901
+|-op---|aafRRRRR|------data----|
+
+For relative jumps, loads, and stores, say "load r0, (sp+4)", the 
+specified offset is just placed in the word immediately following
+the instruction.  This isn't the best way to do these things, but
+is probably the simplest, so.
+
+In two-operand instructions, the upper 8 bytes of the data segment 
+are used to hold the destination information, and the lower 8 bytes
+hold the source information.
+
+
+
+INSTRUCTION SET
+reg = a register.  not the contents of one, a register.
+mem = a dereferenced register, or absolute address
+const = some literal number
+
+*MEMORY (5)
+load reg, mem|reg|const
+store mem, reg
+xchg reg, reg
+
+push reg
+pop reg
+
+
+*MATH (5)
+Right now, "math" means "signed, 32-bit integer math, with no overflow, carry
+or borrow operations".
+add reg, mem|reg|const
+sub, mul, div, mod with the same format
+
+*LOGIC (BINARY) (9)
+shl reg, mem|reg|const
+shr, and, or, not, xor with the same format
+
+rotl reg, mem|reg|const
+rotr reg, mem|reg|const
+
+*COMPARE AND BRANCH (13)
+cmp reg, mem|reg|const
+cmpz mem|reg|const
+jp mem|reg|const
+jz, jnz, je, jne, jl, jle, jg, jge
+call mem|reg|const
+ret
+
+*I/O (2)
+print reg   (print lower 8 bits of register as ascii character)
+read reg    (BLOCK and read keystroke into register)
+
+*MISC (4)
+clearf             (clear flag register)
+setf mem|reg|const (set flag register)
+halt
+nop
+
+
+ASSEMBLER
+The assembler simply reads in a text file and outputs a binary file.
+It would be fairly trivial to pre-process the thing with m4 first,
+or maybe some other macro system.  We might end up with a standard
+macro library.
+
+*COMMAND LINE OPTIONS
+-o <filename>   Specifies the output file name.
+
+*SYNTAX
+An instruction is in the form of
+<instr> <dest> <src>
+where dest and src can be omitted if the instruction doesn't need them.
+Everything is case-insensitive.  Commands cannot be split over lines.
+
+A line comment is of the form
+; whatever text
+Comments cannot be placed after instructions.
+
+A label is of the form
+@<name>
+A label just translates to a constant address, and can be declared
+and used anywhere in the file.  No two labels can have the same name.
+
+A data decleration is of the form
+.<name> <number>
+A data decleration defines a label @<name>, and puts the given number in the
+appropriate word.
+
+
+
+TODO
+Finish the assembler.
+Make it capable of actually loading stuff 
+Command line processing for both the assembler and VM.
+Finish implementing instructions (rot, read and print)
+Write some sort of debugger or something.
+
+
+TO THINK ABOUT
+Better I/O?  String-based, I mean.
+File I/O?
+Interrupts?
+Endian-independantness?
+Different floating-point registers?  Would make it more like real
+architectures...

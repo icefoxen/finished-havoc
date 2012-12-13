@@ -1,0 +1,26 @@
+load r0 10000000
+load cp 255
+load dp 255
+sub r0 1
+load r1 r0
+store [100] r1
+xchg r1 r2
+push r1
+pop r3
+add r1 r1
+sub r1 r2
+mul r1 r3
+div r1 2
+shl r1 1
+shr r1 1
+and r1 9
+or r1 10
+not r1
+xor r1 r2
+; Testing the speed of jumps, compares, calls and rets is a tad weirder, 
+; especially without labels.  It's probably safe to assume they're about
+; as fast as a load or store... since that's what they are.
+; 4 = 'sub r0 1'
+cmpz r0
+jnz 4
+halt

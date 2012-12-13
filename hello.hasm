@@ -1,0 +1,15 @@
+writechar 'H'
+writechar 'e'
+writechar 'l'
+writechar 'l'
+writechar 'o'
+writechar 32
+writechar 'w'
+writechar 'o'
+writechar 'r'
+writechar 'l'
+writechar 'd'
+writechar '!'
+writechar 10
+
+halt

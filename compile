@@ -1,0 +1,2 @@
+#!/bin/sh
+clang -O3 -c *.c

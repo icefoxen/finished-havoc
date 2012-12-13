@@ -1,0 +1,6 @@
+load r0 10000000
+sub r0 1
+; 2 = 'sub r0 1'
+cmpz r0
+jnz 2
+halt

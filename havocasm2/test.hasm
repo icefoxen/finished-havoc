@@ -1,0 +1,59 @@
+; Okay, this is a real test file now.
+; It does nothing in particular, but tests lots of things.  
+; Ideally everything.
+
+const a 5
+label fop
+alloc 0x10
+allocfill 0x100 42 
+
+load r0 10
+label loop1
+add r0 1
+cmp r0 100
+je @loop1
+
+load r1 @loop1
+load r2 ^@loop1
+load r7 @startOfFoo
+store ^r7 r0
+add r7 1
+store ^r7 r1
+add r7 1
+load r2 1
+store ^r7 r2
+add r7 1
+load r2 @loop1
+store ^r7 r2
+add r7 1
+load r2 ^@loop1
+store ^r7 r2
+
+load r2 10
+push r2
+load r2 0x10
+push r2
+load r2 0o10
+push r2
+load r2 0b10
+push r2
+call @somefunc
+
+jp @endgame
+
+label somefunc
+pop r0
+pop r1
+add r0 r1
+push r0
+ret
+
+label endgame
+load r0 0x80
+load r1 101
+store ^100 r0 ; comment here!
+store ^r1 r0
+load r4 ^100
+load r5 ^r1
+halt
+

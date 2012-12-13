@@ -1,0 +1,6 @@
+Character constants!
+
+Inc and dec instructions.
+Document that we are word-addressed, and that dest goes first, and stuff.
+
+Case-sensitivity!

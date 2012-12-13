@@ -1,0 +1,8 @@
+; Okay, this is a real test file now.
+load r0 128
+load r1 101
+store [100] r0
+store [r1] r0
+load r4 [100]
+load r5 [r1]
+halt

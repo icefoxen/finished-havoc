@@ -1,0 +1,21 @@
+TODO:
+Wing comment handling in assembler
+Labels
+Data constants
+Directives and file format
+Disassembler?  Should be pretty easy...  
+
+
+FILE FORMAT:
+Magic number: "HVOC": 0x48564F43
+Length of code (words)
+Total memory requested (words)
+Location of stack pointer
+Location of data pointer
+Location of instruction pointer (ie past data segment)
+
+
+OPTIMIZATION:
+Jump table instead of case
+Inline decoding and processing
+Threaded code
